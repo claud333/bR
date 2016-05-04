@@ -3,71 +3,69 @@
 #include <math.h>
 #include <locale.h>
 #include <stdlib.h>
-
-FILE*f;
 struct kmn
 {
 	int x;
 	int y;
+	double *distance;
+};
 
-}*a;
 
-int openfile(char*filename)
+kmn* scan(char*filename,int &size)
 {
-	if ((f = fopen(filename, "r")) == NULL)
+	FILE *f;
+	if (NULL == (f = fopen(filename, "r")))
 	{
-		printf("Ошибка открытия файла\n");
+		printf("error open\n");
 		system("pause");
 		exit(0);
 	}
-
-	int a;
-	int kol = 0;
+	
+	kmn *a=NULL;
+	size = 0;
 	while (!feof(f))
 	{
-		fscanf(f, "%d", &a);
-		kol++;
+		a = (kmn*)realloc(a,sizeof(kmn)*(size + 1));
+		fscanf(f, "%d", &a[size].x);
+		fscanf(f, "%d", &a[size].y);
+		size++;
 	}
 	fclose(f);
-	return kol / 2;
-}
-void scan(kmn *a, char*filename)
-{
-	f = fopen(filename, "r");
-	int i = 0;
-	while (!feof(f))
+	for (int i = 0;i < size;i++)
 	{
-		fscanf(f, "%d", &a[i].x);
-		fscanf(f, "%d", &a[i].y);
-		i++;
+		a[i].distance = (double*)malloc(size - 1);
+		for (int j = 0;j < size;j++)
+		{
+			a[i].distance[j] = sqrt(pow(a[i].x - a[j].x, 2) + pow(a[i].y - a[j].y, 2));
+		}
 	}
-	fclose(f);
+	return a;
 }
 double maxR(kmn *a, int razm)
 {
-	double max = 0;
-	for (int i = 1; i < razm; i++)
+	double max = a[0].distance[0];
+	for (int i = 0;i < razm;i++)
 	{
-		if (max < (sqrt(pow(a[i].x*a[i].x - a[i - 1].x*a[i - 1].x, 2) + (pow(a[i].y*a[i].y - a[i - 1].y*a[i - 1].y, 2)))))
+
+		for (int j = 0;j < razm;j++)
 		{
-			max = (sqrt(pow(a[i].x*a[i].x - a[i - 1].x*a[i - 1].x, 2) + (pow(a[i].y*a[i].y - a[i - 1].y*a[i - 1].y, 2))));
+			if (a[i].distance[j] > max) { max = a[i].distance[j]; }
 		}
 	}
 	return max;
-
 }
 double minR(kmn *a, int razm)
 {
-	double  min = 9999;
-	for (int i = 1; i < razm; i++)
+	double min = a[0].distance[0];
+	for (int i = 0;i < razm;i++)
 	{
-		if (min >(sqrt(pow(a[i].x*a[i].x - a[i - 1].x*a[i - 1].x, 2) + (pow(a[i].y*a[i].y - a[i - 1].y*a[i - 1].y, 2)))))
+		for (int j = 0;j < razm;j++)
 		{
-			min = (sqrt(pow(a[i].x*a[i].x - a[i - 1].x*a[i - 1].x, 2) + (pow(a[i].y*a[i].y - a[i - 1].y*a[i - 1].y, 2))));
+			if (a[i].distance[j] < min) { min = a[i].distance[j]; }
 		}
 	}
-	return min;
 
+	return min;
 }
 void main()
 {
@@ -76,9 +74,9 @@ void main()
 	char filename[30];
 	printf("Введите имя файла\n");
 	scanf("%s", filename);
-	int razm = openfile(filename);
-	a = new kmn[razm];
-	scan(a, filename);
-	printf("Минимальное расстояние = %f\nМаксимальное расстояние = %f\n", minR(a, razm), maxR(a, razm));
+	int i;
+	kmn *a=scan(filename,i);
+
+	printf("Минимальное расстояние = %f\nМаксимальное расстояние = %f\n", minR(a,i), maxR(a,i));
 	system("pause");
 }
